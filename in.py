@@ -6,14 +6,14 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cupid's Arrow - Pile Up Game")
 clock = pygame.time.Clock()
 
-# Load background image
-BG_IMAGE = pygame.image.load("background.jpg")  # Change filename if needed
-BG_IMAGE = pygame.transform.scale(BG_IMAGE, (WIDTH, HEIGHT))  # Resize to fit screen
 
-# Load heart images
+BG_IMAGE = pygame.image.load("download.jpg") 
+BG_IMAGE = pygame.transform.scale(BG_IMAGE, (WIDTH, HEIGHT))  
+
+
 HEARTS_FOLDER = "Red_Flowers"
 heart_images = [pygame.image.load(os.path.join(HEARTS_FOLDER, img)) for img in os.listdir(HEARTS_FOLDER) if img.endswith(".png")]
-heart_images = [pygame.transform.scale(img, (40, 40)) for img in heart_images]  # Resize hearts
+heart_images = [pygame.transform.scale(img, (30, 30)) for img in heart_images]  
 
 class Heart:
     def __init__(self):
@@ -50,7 +50,7 @@ class Heart:
         self.speed = random.randint(2, 4)
         self.landed = False
 
-# Initialize hearts
+
 hearts = [Heart() for _ in range(15)]
 score = 0
 heart_spawn_timer = 0
@@ -87,19 +87,18 @@ while running:
                 game_over = True
                 break
 
-    # Draw background
     screen.blit(BG_IMAGE, (0, 0))
 
-    # Draw hearts
+
     for heart in hearts:
         heart.draw(screen)
 
-    # Display score
+
     score_surface = font.render(f"Score: {score}", True, (0, 0, 0))
     screen.blit(score_surface, (10, 10))
 
     if game_over:
-        game_over_surface = font.render("HAPPY VALENTINES ", True, (255, 0, 0))
+        game_over_surface = font.render("GAME OVER", True, (0, 0, 0))
         screen.blit(game_over_surface, ((WIDTH - game_over_surface.get_width()) // 2, HEIGHT // 2))
 
     pygame.display.flip()
