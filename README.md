@@ -7,8 +7,9 @@ Cupid's Arrow is a simple yet addictive game where you shoot falling hearts befo
 - Tap anywhere to shoot an invisible arrow in that direction.
 - If hearts reach the height of your bow, the game is over!
 - Score points by hitting as many hearts as possible.
-![Image](https://github.com/user-attachments/assets/c0fd144a-737f-4a4c-bcfe-49cdc63bebba)
+![Image](https://github.com/user-attachments/assets/02b3c028-46e7-4c43-b94b-9b06857b2d66)
 
+https://github.com/user-attachments/assets/c8d094b8-8654-488a-92f9-b08ab6017114
 ## 📦 Installation
 ### For Windows/Linux (Python)
 1. Install Python 3.8 or later.
