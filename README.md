@@ -1,8 +1,14 @@
 # Cupid's Arrow - Pile Up Game 💘
 
-An addictive arcade game where you click to hit falling hearts before they pile up! Featuring combo systems, power-ups, particle effects, and progressive difficulty. Designed for desktop/laptop gameplay!
+An addictive arcade game where you click to hit falling hearts before they pile up! Featuring combo systems, power-ups, particle effects, and progressive difficulty. Designed for desktop/laptop gameplay with a comprehensive tutorial intro!
 
 ## ✨ Features
+
+### 🎓 Interactive Tutorial
+- **Intro Screen**: Beautiful animated tutorial that explains all game mechanics
+- **Visual Examples**: Shows what each heart type and power-up does
+- **Clear Instructions**: Step-by-step guide for new players
+- **Skip Anytime**: Click or press ENTER to start playing immediately
 
 ### 🎮 Core Gameplay
 - **Hearts Stack Dynamically**: Hearts fall and pile up on each other realistically
@@ -25,9 +31,9 @@ An addictive arcade game where you click to hit falling hearts before they pile 
 ### 🌟 Visual Effects
 - **Particle explosions** when hearts are hit (pink for regular, gold for bonus)
 - **Floating score popups** showing points earned
+- **Glowing power-ups** with animated effects
 - **Shadows and outlines** on all hearts for better visibility
 - **Pulsing danger line** warning when hearts get too high
-- **Glowing power-ups** with animated effects
 - **Text outlines** for perfect readability on any background
 
 ### 🎨 Enhanced UI
@@ -46,6 +52,7 @@ An addictive arcade game where you click to hit falling hearts before they pile 
 | **Mouse Click** | Click on hearts to hit them |
 | **SPACE or P** | Pause/Unpause the game |
 | **R** | Restart after game over |
+| **ENTER** | Start game from intro screen |
 | **Move Mouse** | Collect power-ups by hovering over them |
 
 ## 📦 Installation
@@ -64,6 +71,8 @@ An addictive arcade game where you click to hit falling hearts before they pile 
    ```sh
    python in.py
    ```
+
+**First time playing?** The game will show you an interactive tutorial screen explaining all the mechanics. Click anywhere or press ENTER to start playing!
 
 ## 🎯 Gameplay Tips
 
@@ -109,6 +118,12 @@ An addictive arcade game where you click to hit falling hearts before they pile 
 - Game clears some hearts after losing a life (gives you a chance!)
 - Shield power-up can save you from losing a life
 
+### Tutorial System
+- Shows automatically on first launch
+- Explains all game mechanics with visual examples
+- Can be skipped instantly with click or ENTER
+- Doesn't show again after restart
+
 ## 📜 License
 
 This game is open-source and free to modify. Enjoy!
@@ -116,4 +131,3 @@ This game is open-source and free to modify. Enjoy!
 ---
 
 **Happy gaming!** 💘 Can you reach Level 10?
-

@@ -217,6 +217,7 @@ class GameState:
         self.combo_timer = 0
         self.game_over = False
         self.paused = False
+        self.show_intro = True  # NEW: Start with intro screen
         self.spawn_timer = 0
         self.spawn_interval = 30
         self.level = 1
@@ -236,6 +237,7 @@ class GameState:
         self.combo_timer = 0
         self.game_over = False
         self.paused = False
+        self.show_intro = False  # Don't show intro after restart
         self.spawn_timer = 0
         self.spawn_interval = 30
         self.level = 1
@@ -248,30 +250,41 @@ class GameState:
 game_state = GameState()
 font = pygame.font.SysFont(None, 32)
 title_font = pygame.font.SysFont(None, 56)
+large_font = pygame.font.SysFont(None, 72)
 small_font = pygame.font.SysFont(None, 24)
 running = True
+intro_animation_time = 0
 
 # Main game loop
 while running:
     dt = clock.tick(60)
+    intro_animation_time += 1
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         
         if event.type == pygame.KEYDOWN:
+            # Press ENTER or SPACE to start from intro
+            if game_state.show_intro and event.key in [pygame.K_RETURN, pygame.K_SPACE]:
+                game_state.show_intro = False
+            
             # Press R to restart when game is over
-            if game_state.game_over and event.key == pygame.K_r:
+            elif game_state.game_over and event.key == pygame.K_r:
                 if game_state.score > game_state.high_score:
                     game_state.high_score = game_state.score
                 game_state.reset()
             
-            # Press P or SPACE to pause
-            if not game_state.game_over and event.key in [pygame.K_p, pygame.K_SPACE]:
+            # Press P or SPACE to pause (only during gameplay)
+            elif not game_state.game_over and not game_state.show_intro and event.key in [pygame.K_p, pygame.K_SPACE]:
                 game_state.paused = not game_state.paused
 
+        # Mouse click to start from intro
+        if game_state.show_intro and event.type == pygame.MOUSEBUTTONDOWN:
+            game_state.show_intro = False
+        
         # Mouse click to hit hearts (laptop-friendly)
-        if not game_state.game_over and not game_state.paused and event.type == pygame.MOUSEBUTTONDOWN:
+        elif not game_state.game_over and not game_state.paused and not game_state.show_intro and event.type == pygame.MOUSEBUTTONDOWN:
             mx, my = pygame.mouse.get_pos()
             hit_heart = None
             
@@ -311,7 +324,7 @@ while running:
                     game_state.level += 1
                     game_state.spawn_interval = max(15, game_state.spawn_interval - 2)
 
-    if not game_state.game_over and not game_state.paused:
+    if not game_state.game_over and not game_state.paused and not game_state.show_intro:
         # Update timers
         if game_state.combo_timer > 0:
             game_state.combo_timer -= 1
@@ -393,121 +406,239 @@ while running:
     # Drawing
     screen.blit(BG_IMAGE, (0, 0))
     
-    # Draw danger line with pulsing effect
-    danger_line = HEIGHT // 2 + 50
-    pulse = abs(math.sin(pygame.time.get_ticks() * 0.005)) * 30 + 50
-    danger_color = (255, int(pulse), int(pulse))
-    pygame.draw.line(screen, danger_color, (0, danger_line), (WIDTH, danger_line), 3)
-    
-    # Draw hearts
-    for heart in game_state.hearts:
-        heart.draw(screen)
-    
-    # Draw particles
-    for particle in game_state.particles:
-        particle.draw(screen)
-    
-    # Draw power-ups
-    for powerup in game_state.powerups:
-        powerup.draw(screen, font)
-    
-    # Draw score popups
-    for popup in game_state.score_popups:
-        popup.draw(screen, font)
-    
-    # Draw UI with better visibility
-    # Score
-    score_text = f"Score: {game_state.score}"
-    score_surface = font.render(score_text, True, (255, 255, 255))
-    score_outline = font.render(score_text, True, (0, 0, 0))
-    screen.blit(score_outline, (12, 12))
-    screen.blit(score_surface, (10, 10))
-    
-    # High Score
-    if game_state.high_score > 0:
-        high_score_text = f"Best: {game_state.high_score}"
-        high_score_surface = small_font.render(high_score_text, True, (255, 255, 100))
-        high_score_outline = small_font.render(high_score_text, True, (0, 0, 0))
-        screen.blit(high_score_outline, (12, 42))
-        screen.blit(high_score_surface, (10, 40))
-    
-    # Combo
-    if game_state.combo > 1:
-        combo_text = f"COMBO x{game_state.combo}!"
-        combo_size = 40 + int(abs(math.sin(pygame.time.get_ticks() * 0.01)) * 5)
-        combo_font = pygame.font.SysFont(None, combo_size)
-        combo_surface = combo_font.render(combo_text, True, (255, 200, 0))
-        combo_outline = combo_font.render(combo_text, True, (255, 0, 0))
-        x = WIDTH // 2 - combo_surface.get_width() // 2
-        screen.blit(combo_outline, (x + 2, 52))
-        screen.blit(combo_surface, (x, 50))
-    
-    # Level
-    level_text = f"Level {game_state.level}"
-    level_surface = font.render(level_text, True, (255, 255, 255))
-    level_outline = font.render(level_text, True, (0, 0, 0))
-    screen.blit(level_outline, (WIDTH - level_surface.get_width() - 8, 12))
-    screen.blit(level_surface, (WIDTH - level_surface.get_width() - 10, 10))
-    
-    # Lives
-    lives_text = f"Lives: "
-    lives_surface = font.render(lives_text, True, (255, 255, 255))
-    lives_outline = font.render(lives_text, True, (0, 0, 0))
-    screen.blit(lives_outline, (WIDTH - 122, 42))
-    screen.blit(lives_surface, (WIDTH - 124, 40))
-    
-    # Draw heart icons for lives
-    for i in range(game_state.lives):
-        heart_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
-        pygame.draw.circle(heart_icon, (255, 0, 100), (7, 9), 5)
-        pygame.draw.circle(heart_icon, (255, 0, 100), (13, 9), 5)
-        pygame.draw.polygon(heart_icon, (255, 0, 100), [(3, 9), (17, 9), (10, 18)])
-        screen.blit(heart_icon, (WIDTH - 60 + i * 22, 44))
-    
-    # Active power-ups indicator
-    y_offset = 70
-    if game_state.slowmo_timer > 0:
-        slowmo_text = f"SLOW-MO: {game_state.slowmo_timer // 60 + 1}s"
-        slowmo_surface = small_font.render(slowmo_text, True, (100, 200, 255))
-        screen.blit(slowmo_surface, (WIDTH - 150, y_offset))
-        y_offset += 25
-    
-    if game_state.shield_timer > 0:
-        shield_text = f"SHIELD: {game_state.shield_timer // 60 + 1}s"
-        shield_surface = small_font.render(shield_text, True, (100, 255, 100))
-        screen.blit(shield_surface, (WIDTH - 150, y_offset))
-    
-    # Pause screen
-    if game_state.paused:
+    # INTRO SCREEN
+    if game_state.show_intro:
+        # Semi-transparent overlay
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 150))
+        overlay.fill((0, 0, 0, 200))
         screen.blit(overlay, (0, 0))
         
-        pause_surface = title_font.render("PAUSED", True, (255, 255, 255))
-        continue_surface = font.render("Press SPACE to Continue", True, (200, 200, 200))
+        # Animated title
+        title_bounce = abs(math.sin(intro_animation_time * 0.05)) * 10
+        title_surface = large_font.render("CUPID'S ARROW", True, (255, 100, 150))
+        title_outline = large_font.render("CUPID'S ARROW", True, (255, 255, 255))
+        tx = WIDTH // 2 - title_surface.get_width() // 2
+        screen.blit(title_outline, (tx + 2, int(50 - title_bounce + 2)))
+        screen.blit(title_surface, (tx, int(50 - title_bounce)))
         
-        screen.blit(pause_surface, (WIDTH // 2 - pause_surface.get_width() // 2, HEIGHT // 2 - 40))
-        screen.blit(continue_surface, (WIDTH // 2 - continue_surface.get_width() // 2, HEIGHT // 2 + 20))
-    
-    # Game over screen
-    if game_state.game_over:
-        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180))
-        screen.blit(overlay, (0, 0))
+        subtitle = small_font.render("~ Pile Up Game ~", True, (255, 200, 220))
+        screen.blit(subtitle, (WIDTH // 2 - subtitle.get_width() // 2, 115))
         
-        game_over_surface = title_font.render("GAME OVER", True, (255, 50, 50))
-        final_score_surface = font.render(f"Final Score: {game_state.score}", True, (255, 255, 255))
-        level_reached_surface = font.render(f"Level Reached: {game_state.level}", True, (200, 200, 200))
-        restart_surface = font.render("Press R to Restart", True, (100, 255, 100))
+        # Instructions box
+        y_start = 155
+        line_height = 28
         
-        if game_state.score > game_state.high_score:
-            new_high_surface = font.render("NEW HIGH SCORE!", True, (255, 215, 0))
-            screen.blit(new_high_surface, (WIDTH // 2 - new_high_surface.get_width() // 2, HEIGHT // 2 - 100))
+        # How to Play section
+        section_font = pygame.font.SysFont(None, 36)
+        how_to_play = section_font.render("HOW TO PLAY:", True, (255, 215, 0))
+        screen.blit(how_to_play, (WIDTH // 2 - how_to_play.get_width() // 2, y_start))
         
-        screen.blit(game_over_surface, (WIDTH // 2 - game_over_surface.get_width() // 2, HEIGHT // 2 - 60))
-        screen.blit(final_score_surface, (WIDTH // 2 - final_score_surface.get_width() // 2, HEIGHT // 2))
-        screen.blit(level_reached_surface, (WIDTH // 2 - level_reached_surface.get_width() // 2, HEIGHT // 2 + 40))
-        screen.blit(restart_surface, (WIDTH // 2 - restart_surface.get_width() // 2, HEIGHT // 2 + 80))
+        instructions = [
+            ("Click hearts to hit them before they pile up!", (255, 255, 255)),
+            ("Don't let hearts reach the danger line!", (255, 120, 120)),
+            ("Build combos for bonus multipliers!", (255, 200, 0)),
+        ]
+        
+        y = y_start + 35
+        for text, color in instructions:
+            inst_surface = small_font.render(text, True, color)
+            inst_outline = small_font.render(text, True, (0, 0, 0))
+            x = WIDTH // 2 - inst_surface.get_width() // 2
+            screen.blit(inst_outline, (x + 1, y + 1))
+            screen.blit(inst_surface, (x, y))
+            y += line_height
+        
+        # Hearts section
+        y += 8
+        hearts_title = font.render("HEARTS:", True, (255, 215, 0))
+        screen.blit(hearts_title, (WIDTH // 2 - hearts_title.get_width() // 2, y))
+        y += 32
+        
+        # Show heart examples with descriptions
+        heart_examples = [
+            (heart_images[0], "Regular Heart = 1 Point", (255, 100, 150)),
+            (heart_images[1] if len(heart_images) > 1 else heart_images[0], "Golden Heart = 10 Points!", (255, 215, 0))
+        ]
+        
+        for heart_img, desc, color in heart_examples:
+            # Draw heart
+            heart_x = WIDTH // 2 - 115
+            screen.blit(heart_img, (heart_x, y - 5))
+            # Draw description
+            desc_surface = small_font.render(desc, True, color)
+            desc_outline = small_font.render(desc, True, (0, 0, 0))
+            screen.blit(desc_outline, (heart_x + 45, y + 1))
+            screen.blit(desc_surface, (heart_x + 45, y))
+            y += 32
+        
+        # Power-ups section
+        y += 8
+        powerups_title = font.render("POWER-UPS:", True, (255, 215, 0))
+        screen.blit(powerups_title, (WIDTH // 2 - powerups_title.get_width() // 2, y))
+        y += 32
+        
+        powerup_info = [
+            ("S", "Slow-Mo: Slows down hearts", (100, 200, 255)),
+            ("B", "Bomb: Clears all hearts", (255, 100, 100)),
+            ("H", "Shield: Protects from danger", (100, 255, 100))
+        ]
+        
+        for icon, desc, color in powerup_info:
+            # Draw power-up icon
+            icon_x = WIDTH // 2 - 128
+            pygame.draw.circle(screen, color, (icon_x + 12, y + 10), 14)
+            pygame.draw.circle(screen, (255, 255, 255), (icon_x + 12, y + 10), 14, 2)
+            icon_text = small_font.render(icon, True, (0, 0, 0))
+            screen.blit(icon_text, (icon_x + 12 - icon_text.get_width() // 2, y + 3))
+            
+            # Draw description
+            desc_surface = small_font.render(desc, True, (255, 255, 255))
+            desc_outline = small_font.render(desc, True, (0, 0, 0))
+            screen.blit(desc_outline, (icon_x + 38, y + 3))
+            screen.blit(desc_surface, (icon_x + 38, y + 2))
+            y += 30
+        
+        # Controls section
+        y += 10
+        controls_title = font.render("CONTROLS:", True, (255, 215, 0))
+        screen.blit(controls_title, (WIDTH // 2 - controls_title.get_width() // 2, y))
+        y += 28
+        
+        controls = [
+            "Mouse: Click hearts & collect power-ups",
+            "SPACE/P: Pause  |  R: Restart"
+        ]
+        
+        for control in controls:
+            ctrl_surface = small_font.render(control, True, (200, 200, 200))
+            screen.blit(ctrl_surface, (WIDTH // 2 - ctrl_surface.get_width() // 2, y))
+            y += 24
+        
+        # Animated start prompt
+        start_pulse = abs(math.sin(intro_animation_time * 0.1)) * 255
+        start_text = "CLICK OR PRESS ENTER TO START"
+        start_surface = font.render(start_text, True, (int(start_pulse), 255, int(start_pulse)))
+        start_outline = font.render(start_text, True, (0, 0, 0))
+        screen.blit(start_outline, (WIDTH // 2 - start_surface.get_width() // 2 + 2, HEIGHT - 57))
+        screen.blit(start_surface, (WIDTH // 2 - start_surface.get_width() // 2, HEIGHT - 55))
+        
+    else:
+        # GAMEPLAY SCREEN
+        # Draw danger line with pulsing effect
+        danger_line = HEIGHT // 2 + 50
+        pulse = abs(math.sin(pygame.time.get_ticks() * 0.005)) * 30 + 50
+        danger_color = (255, int(pulse), int(pulse))
+        pygame.draw.line(screen, danger_color, (0, danger_line), (WIDTH, danger_line), 3)
+        
+        # Draw hearts
+        for heart in game_state.hearts:
+            heart.draw(screen)
+        
+        # Draw particles
+        for particle in game_state.particles:
+            particle.draw(screen)
+        
+        # Draw power-ups
+        for powerup in game_state.powerups:
+            powerup.draw(screen, font)
+        
+        # Draw score popups
+        for popup in game_state.score_popups:
+            popup.draw(screen, font)
+        
+        # Draw UI with better visibility
+        # Score
+        score_text = f"Score: {game_state.score}"
+        score_surface = font.render(score_text, True, (255, 255, 255))
+        score_outline = font.render(score_text, True, (0, 0, 0))
+        screen.blit(score_outline, (12, 12))
+        screen.blit(score_surface, (10, 10))
+        
+        # High Score
+        if game_state.high_score > 0:
+            high_score_text = f"Best: {game_state.high_score}"
+            high_score_surface = small_font.render(high_score_text, True, (255, 255, 100))
+            high_score_outline = small_font.render(high_score_text, True, (0, 0, 0))
+            screen.blit(high_score_outline, (12, 42))
+            screen.blit(high_score_surface, (10, 40))
+        
+        # Combo
+        if game_state.combo > 1:
+            combo_text = f"COMBO x{game_state.combo}!"
+            combo_size = 40 + int(abs(math.sin(pygame.time.get_ticks() * 0.01)) * 5)
+            combo_font = pygame.font.SysFont(None, combo_size)
+            combo_surface = combo_font.render(combo_text, True, (255, 200, 0))
+            combo_outline = combo_font.render(combo_text, True, (255, 0, 0))
+            x = WIDTH // 2 - combo_surface.get_width() // 2
+            screen.blit(combo_outline, (x + 2, 52))
+            screen.blit(combo_surface, (x, 50))
+        
+        # Level
+        level_text = f"Level {game_state.level}"
+        level_surface = font.render(level_text, True, (255, 255, 255))
+        level_outline = font.render(level_text, True, (0, 0, 0))
+        screen.blit(level_outline, (WIDTH - level_surface.get_width() - 8, 12))
+        screen.blit(level_surface, (WIDTH - level_surface.get_width() - 10, 10))
+        
+        # Lives
+        lives_text = f"Lives: "
+        lives_surface = font.render(lives_text, True, (255, 255, 255))
+        lives_outline = font.render(lives_text, True, (0, 0, 0))
+        screen.blit(lives_outline, (WIDTH - 122, 42))
+        screen.blit(lives_surface, (WIDTH - 124, 40))
+        
+        # Draw heart icons for lives
+        for i in range(game_state.lives):
+            heart_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
+            pygame.draw.circle(heart_icon, (255, 0, 100), (7, 9), 5)
+            pygame.draw.circle(heart_icon, (255, 0, 100), (13, 9), 5)
+            pygame.draw.polygon(heart_icon, (255, 0, 100), [(3, 9), (17, 9), (10, 18)])
+            screen.blit(heart_icon, (WIDTH - 60 + i * 22, 44))
+        
+        # Active power-ups indicator
+        y_offset = 70
+        if game_state.slowmo_timer > 0:
+            slowmo_text = f"SLOW-MO: {game_state.slowmo_timer // 60 + 1}s"
+            slowmo_surface = small_font.render(slowmo_text, True, (100, 200, 255))
+            screen.blit(slowmo_surface, (WIDTH - 150, y_offset))
+            y_offset += 25
+        
+        if game_state.shield_timer > 0:
+            shield_text = f"SHIELD: {game_state.shield_timer // 60 + 1}s"
+            shield_surface = small_font.render(shield_text, True, (100, 255, 100))
+            screen.blit(shield_surface, (WIDTH - 150, y_offset))
+        
+        # Pause screen
+        if game_state.paused:
+            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 150))
+            screen.blit(overlay, (0, 0))
+            
+            pause_surface = title_font.render("PAUSED", True, (255, 255, 255))
+            continue_surface = font.render("Press SPACE to Continue", True, (200, 200, 200))
+            
+            screen.blit(pause_surface, (WIDTH // 2 - pause_surface.get_width() // 2, HEIGHT // 2 - 40))
+            screen.blit(continue_surface, (WIDTH // 2 - continue_surface.get_width() // 2, HEIGHT // 2 + 20))
+        
+        # Game over screen
+        if game_state.game_over:
+            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))
+            screen.blit(overlay, (0, 0))
+            
+            game_over_surface = title_font.render("GAME OVER", True, (255, 50, 50))
+            final_score_surface = font.render(f"Final Score: {game_state.score}", True, (255, 255, 255))
+            level_reached_surface = font.render(f"Level Reached: {game_state.level}", True, (200, 200, 200))
+            restart_surface = font.render("Press R to Restart", True, (100, 255, 100))
+            
+            if game_state.score > game_state.high_score:
+                new_high_surface = font.render("NEW HIGH SCORE!", True, (255, 215, 0))
+                screen.blit(new_high_surface, (WIDTH // 2 - new_high_surface.get_width() // 2, HEIGHT // 2 - 100))
+            
+            screen.blit(game_over_surface, (WIDTH // 2 - game_over_surface.get_width() // 2, HEIGHT // 2 - 60))
+            screen.blit(final_score_surface, (WIDTH // 2 - final_score_surface.get_width() // 2, HEIGHT // 2))
+            screen.blit(level_reached_surface, (WIDTH // 2 - level_reached_surface.get_width() // 2, HEIGHT // 2 + 40))
+            screen.blit(restart_surface, (WIDTH // 2 - restart_surface.get_width() // 2, HEIGHT // 2 + 80))
 
     pygame.display.flip()
 
